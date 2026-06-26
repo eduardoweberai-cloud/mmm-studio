@@ -73,3 +73,11 @@ export function studentTwoSidedP(t: number, df: number): number {
   const x = df / (df + t * t);
   return betai(df / 2, 0.5, x);
 }
+
+/** Upper-tail p-value P(F > f) for F ~ F(df1, df2) (the overall regression F-test). */
+export function fTestPValue(f: number, df1: number, df2: number): number {
+  if (df1 <= 0 || df2 <= 0) return NaN;
+  if (!Number.isFinite(f)) return f > 0 ? 0 : NaN;
+  if (f <= 0) return 1;
+  return betai(df2 / 2, df1 / 2, df2 / (df2 + df1 * f));
+}

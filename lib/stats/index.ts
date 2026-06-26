@@ -14,7 +14,7 @@ import { rmse, mape, testR2 } from './metrics';
 import { computeVif } from './vif';
 import { contributions } from './contribution';
 import { applyTransforms } from './transforms';
-import { studentTwoSidedP } from './dist';
+import { studentTwoSidedP, fTestPValue } from './dist';
 
 export * from './types';
 
@@ -144,6 +144,22 @@ export function fit(dataset: Dataset, config: ModelConfig): FitResponse {
 
   const adjR2 = dfResid > 0 ? 1 - ((1 - f.r2) * (n - 1)) / dfResid : null;
 
+  // Overall F-test: are all the variables together significant?
+  // F = (R2/df1) / ((1-R2)/df2), df1 = predictors, df2 = residual df.
+  const df1 = Math.max(0, f.rank - 1);
+  const df2 = dfResid;
+  let fStat: number | null = null;
+  let fPValue: number | null = null;
+  if (df1 > 0 && df2 > 0) {
+    if (1 - f.r2 < 1e-12) {
+      fStat = Infinity;
+      fPValue = 0;
+    } else {
+      fStat = (f.r2 * df2) / ((1 - f.r2) * df1);
+      fPValue = fTestPValue(fStat, df1, df2);
+    }
+  }
+
   const model: RegressionResult = {
     intercept,
     coefficients,
@@ -156,6 +172,8 @@ export function fit(dataset: Dataset, config: ModelConfig): FitResponse {
     contributions: contribs,
     warnings,
     droppedRows,
+    fStat,
+    fPValue,
   };
 
   const preds = Xtest.map((row) => predictY(f.intercept, f.beta, row));

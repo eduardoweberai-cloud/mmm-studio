@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { olsFit } from '../ols';
 import { fit } from '../index';
-import { studentTwoSidedP } from '../dist';
+import { studentTwoSidedP, fTestPValue } from '../dist';
 import type { Dataset, ModelConfig } from '../types';
 
 describe('olsFit - exact fit (algebra, independent of any stats lib)', () => {
@@ -166,5 +166,23 @@ describe('numerical robustness (the -240000 bug)', () => {
     expect(model.r2).toBeLessThanOrEqual(1);
     expect(model.r2).toBeGreaterThan(0.99);
     expect(Number.isFinite(model.intercept.beta)).toBe(true);
+  });
+});
+
+describe('F-test (overall significance)', () => {
+  it('fTestPValue: F=4.5, df1=1, df2=3 -> ~0.124', () => {
+    const p = fTestPValue(4.5, 1, 3);
+    expect(p).toBeGreaterThan(0.11);
+    expect(p).toBeLessThan(0.14);
+  });
+
+  it('fit reports F and its p-value; F equals t^2 for one predictor', () => {
+    const x = [1, 2, 3, 4, 5];
+    const y = [2, 4, 5, 4, 5];
+    const ds: Dataset = { yLabel: 'Y', xLabels: ['X1'], y, x: x.map((v) => [v]) };
+    const { model } = fit(ds, { activeX: [0], trainRatio: 1 });
+    expect(model.fStat).toBeCloseTo(4.5, 4);
+    expect(model.fPValue).toBeGreaterThan(0.11);
+    expect(model.fPValue).toBeLessThan(0.14);
   });
 });

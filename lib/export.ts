@@ -29,6 +29,13 @@ export function buildResultCsv(result: FitResponse, generatedAt: string): string
   lines.push(row('Resumo'));
   lines.push(row('R2 (treino)', num(model.r2)));
   lines.push(row('R2 ajustado', model.adjR2 === null ? '' : num(model.adjR2)));
+  lines.push(
+    row(
+      'F (teste global)',
+      model.fStat === null ? '' : Number.isFinite(model.fStat) ? num(model.fStat, 2) : 'infinito',
+    ),
+  );
+  lines.push(row('Significancia F (p-valor)', model.fPValue === null ? '' : num(model.fPValue, 6)));
   lines.push(row('Linhas de treino', model.n));
   lines.push(row('Linhas de teste', validation.rows.length));
   lines.push(row('Variaveis no modelo', model.k));

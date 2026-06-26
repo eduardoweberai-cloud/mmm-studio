@@ -25,11 +25,35 @@ function fmt(v: number | null | undefined, d = 2): string {
   return v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
-function Card({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function fF(v: number | null | undefined): string {
+  if (v === null || v === undefined) return '--';
+  if (!Number.isFinite(v)) return '∞';
+  return v.toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+}
+
+function fP(v: number | null | undefined): string {
+  if (v === null || v === undefined || !Number.isFinite(v)) return '--';
+  if (v < 0.0001) return '< 0,0001';
+  return v.toLocaleString('pt-BR', { maximumFractionDigits: 4, minimumFractionDigits: 0 });
+}
+
+function Card({
+  label,
+  value,
+  hint,
+  testid,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  testid?: string;
+  valueClass?: string;
+}) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4" data-testid={testid}>
       <div className="text-xs uppercase tracking-wide text-zinc-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-zinc-50">{value}</div>
+      <div className={`mt-1 text-2xl font-semibold ${valueClass ?? 'text-zinc-50'}`}>{value}</div>
       {hint ? <div className="mt-1 text-xs text-zinc-500">{hint}</div> : null}
     </div>
   );
@@ -91,9 +115,23 @@ export default function Results({ result }: { result: FitResponse }) {
         </div>
       </div>
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Card label="R²" value={fmt(model.r2, 4)} hint="ajuste no treino" />
         <Card label="R² ajustado" value={model.adjR2 === null ? '--' : fmt(model.adjR2, 4)} />
+        <Card label="F" value={fF(model.fStat)} hint="teste global do modelo" />
+        <Card
+          label="Significancia F"
+          value={fP(model.fPValue)}
+          hint="p < 0,05 = significativo"
+          testid="f-test"
+          valueClass={
+            model.fPValue === null
+              ? 'text-zinc-50'
+              : model.fPValue < 0.05
+                ? 'text-emerald-400'
+                : 'text-amber-400'
+          }
+        />
         <Card label="Treino / Teste" value={`${model.n} / ${validation.rows.length}`} hint="linhas" />
         <Card label="Graus de liberdade" value={String(model.degreesOfFreedom)} hint={`${model.k} variaveis`} />
       </div>

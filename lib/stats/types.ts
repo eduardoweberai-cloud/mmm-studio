@@ -57,6 +57,10 @@ export type RegressionResult = {
   warnings: string[];
   /** Rows excluded because of missing data. */
   droppedRows: number;
+  /** Overall F-test (all variables jointly); null when undefined. */
+  fStat: number | null;
+  /** p-value of the overall F-test ("Significancia F"). */
+  fPValue: number | null;
 };
 
 export type ValidationRow = { period?: string; actual: number; predicted: number };
